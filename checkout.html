@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout - Hayacozy</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; }
+    input, select, button { width: 100%; padding: 10px; margin: 5px 0; }
+    .summary { background: #f4f4f4; padding: 10px; margin-top: 20px; }
+    .summary h3 { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+  <h2>Checkout Form</h2>
+  <form id="checkout-form">
+    <input type="text" name="fullname" placeholder="Full Name" required>
+    <input type="text" name="address" placeholder="Address" required>
+    <input type="text" name="street" placeholder="Street Name" required>
+    <input type="text" name="pincode" placeholder="Pincode" required>
+    <input type="tel" name="phone" placeholder="Phone Number" required>
+    <button type="submit" id="pay-button">Proceed to Payment</button>
+  </form>
+
+  <div class="summary">
+    <h3>Order Summary</h3>
+    <p id="summary-text">Loading...</p>
+  </div>
+
+  <script>
+    // Read quantity from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const neemQty = parseInt(urlParams.get('neem_qty')) || 1;
+
+    // Pricing logic
+    const unitPrice = 2400; // ₹24 in paise
+    const subtotal = neemQty * unitPrice;
+    const gst = Math.round(subtotal * 0.18);
+    const packing = 500; // ₹5
+    const delivery = 1000; // ₹10
+    const total = subtotal + gst + packing + delivery;
+
+    // Update summary
+    document.getElementById("summary-text").innerHTML = `
+      Neem Sticks: ${neemQty} × ₹24 = ₹${(subtotal / 100).toFixed(2)}<br>
+      GST (18%): ₹${(gst / 100).toFixed(2)}<br>
+      Packing Fee: ₹${(packing / 100).toFixed(2)}<br>
+      Delivery Fee: ₹${(delivery / 100).toFixed(2)}<br>
+      <strong>Total: ₹${(total / 100).toFixed(2)}</strong>
+    `;
+
+    // Razorpay Payment
+    document.getElementById("checkout-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.querySelector('[name="fullname"]').value;
+      const phone = document.querySelector('[name="phone"]').value;
+
+      const options = {
+        "key": "rzp_test_aOqBT3hr8DbRmj",//Replace with your Razorpay Test key
+        "amount": total,
+        "currency": "INR",
+        "name": "Hayacozy",
+        "description": "Neem Stick Order",
+        "handler": function (response){
+          alert("Payment successful!\nPayment ID: " + response.razorpay_payment_id);
+        },
+        "prefill": {
+          "name": name,
+          "contact": phone,
+          "email": "test@example.com"
+        },
+        "theme": {
+          "color": "#3399cc"
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    });
+  </script>
+
+</body>
+</html>
